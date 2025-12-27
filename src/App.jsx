@@ -3,7 +3,7 @@ import liff from '@line/liff'
 import { Check, ChevronDown, ChevronUp, FileText, User, Building, CreditCard, Shield, Receipt, MessageCircle, Loader2 } from 'lucide-react'
 
 // ★★★ 後でLIFF IDに置き換えます ★★★
-const LIFF_ID = "YOUR_LIFF_ID"
+const LIFF_ID = "2008786355-AntIpNJL"
 
 const categories = [
   {
