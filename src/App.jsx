@@ -111,10 +111,14 @@ export default function App() {
   }
 
   const sendMessage = () => {
+    const officialAccountUrl = 'https://line.me/R/ti/p/@521sbjrk'
     if (liff.isInClient()) {
-      liff.closeWindow()
+      liff.openWindow({
+        url: officialAccountUrl,
+        external: false
+      })
     } else {
-      alert('LINEアプリからアクセスしてください')
+      window.open(officialAccountUrl, '_blank')
     }
   }
 
