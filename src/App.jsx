@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react'
 import liff from '@line/liff'
 import { Check, ChevronDown, ChevronUp, FileText, User, Building, CreditCard, Shield, Receipt, MessageCircle, Loader2 } from 'lucide-react'
 
-// ★★★ 後でLIFF IDに置き換えます ★★★
 const LIFF_ID = "2008786355-AntIpNJL"
+const API_URL = "https://script.google.com/macros/s/AKfycbyqPL0rAgeCp9Uuj2STuP55jmb-XBn5U19Hr3oy-jOEz-hzM7hwv0b_uP1toYUN5ULD/exec"
 
 const categories = [
   {
@@ -59,6 +59,7 @@ const categories = [
   },
 ]
 
+const allItems = categories.flatMap(cat => cat.items)
 const iconMap = { FileText, User, Building, CreditCard, Shield, Receipt }
 
 export default function App() {
@@ -79,7 +80,7 @@ export default function App() {
       if (liff.isLoggedIn()) {
         const userProfile = await liff.getProfile()
         setProfile(userProfile)
-        loadCheckedItems(userProfile.userId)
+        await loadCheckedItems(userProfile.userId)
       } else {
         liff.login()
       }
@@ -91,13 +92,38 @@ export default function App() {
     }
   }
 
-  const loadCheckedItems = (userId) => {
-    const saved = localStorage.getItem(`checklist_${userId}`)
-    if (saved) setCheckedItems(JSON.parse(saved))
+  const loadCheckedItems = async (userId) => {
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: 'load', lineId: userId })
+      })
+      const data = await response.json()
+      if (data.success && data.checkedItems) {
+        setCheckedItems(data.checkedItems)
+      }
+    } catch (e) {
+      console.error('Load error:', e)
+    }
   }
 
-  const saveCheckedItems = (userId, items) => {
-    localStorage.setItem(`checklist_${userId}`, JSON.stringify(items))
+  const saveCheckedItems = async (userId, userName, items) => {
+    try {
+      await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({
+          action: 'save',
+          lineId: userId,
+          userName: userName,
+          checkedItems: items,
+          allItems: allItems
+        })
+      })
+    } catch (e) {
+      console.error('Save error:', e)
+    }
   }
 
   const toggleItem = async (itemId) => {
@@ -105,8 +131,7 @@ export default function App() {
     setIsSaving(true)
     const newItems = { ...checkedItems, [itemId]: !checkedItems[itemId] }
     setCheckedItems(newItems)
-    saveCheckedItems(profile.userId, newItems)
-    await new Promise(r => setTimeout(r, 300))
+    await saveCheckedItems(profile.userId, profile.displayName, newItems)
     setIsSaving(false)
   }
 
