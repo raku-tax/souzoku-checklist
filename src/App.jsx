@@ -79,7 +79,7 @@ export default function App() {
       if (liff.isLoggedIn()) {
         const userProfile = await liff.getProfile()
         setProfile(userProfile)
-        loadCheckedItems(userProfile.userId visio)
+        loadCheckedItems(userProfile.userId)
       } else {
         liff.login()
       }
