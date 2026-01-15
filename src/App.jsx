@@ -805,9 +805,13 @@ export default function App() {
 
   const loadCheckedItems = async (userId) => {
     try {
-      const response = await fetch(`${API_URL}?userId=${userId}`)
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: 'load', lineId: userId })
+      })
       const data = await response.json()
-      if (data.checkedItems) {
+      if (data.success && data.checkedItems) {
         setCheckedItems(data.checkedItems)
       }
     } catch (e) {
@@ -816,13 +820,25 @@ export default function App() {
     }
   }
 
-  const saveCheckedItems = async (userId, items) => {
+  const saveCheckedItems = async (userId, userName, items) => {
     localStorage.setItem(`checklist_${userId}`, JSON.stringify(items))
+    
+    // 全項目リストを作成
+    const allItems = categories.flatMap(cat => 
+      cat.items.map(item => ({ id: item.id, name: item.name }))
+    )
+    
     try {
       await fetch(API_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, checkedItems: items })
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ 
+          action: 'save',
+          lineId: userId,
+          userName: userName,
+          checkedItems: items,
+          allItems: allItems
+        })
       })
     } catch (e) {
       console.error('保存エラー:', e)
@@ -834,7 +850,7 @@ export default function App() {
     setIsSaving(true)
     const newItems = { ...checkedItems, [itemId]: !checkedItems[itemId] }
     setCheckedItems(newItems)
-    await saveCheckedItems(profile.userId, newItems)
+    await saveCheckedItems(profile.userId, profile.displayName, newItems)
     setIsSaving(false)
   }
 
